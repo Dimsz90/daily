@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Broadcast</title>
+  <script crossorigin src="https://unpkg.com/@daily-co/daily-js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      background-color: #fff;
+      border-radius: 10px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: #fff;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    #status {
+      margin: 20px 0;
+      font-size: 18px;
+    }
+    #audience-list {
+      text-align: left;
+      margin-top: 20px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+    #audience-list ul {
+      list-style: none;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Audio Broadcast</h1>
+    <div id="controls">
+      <button id="join-as-host">Join as Host</button>
+      <button id="join-as-audience">Join sebagai Pendengar</button>
+    </div>
+    <div id="call" class="hidden">
+      <p id="status">Connecting...</p>
+      <button id="leave-call">Keluar</button>
+      <button id="mute-microphone" class="hidden">Mute Microphone</button>
+      <button id="unmute-microphone" class="hidden">Unmute Microphone</button>
+      <div id="audience-list" class="hidden">
+        <h2>Peserta</h2>
+        <ul id="audience-ul"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
