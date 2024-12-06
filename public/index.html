@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Broadcast</title>
+    <script src="https://unpkg.com/@daily-co/daily-js"></script>
+    <script src="app.js" defer></script>
+    <style>
+        /* Base Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Room Controls */
+        .room-controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .room-controls button {
+            background-color: #3498db;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .room-controls button:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+        }
+
+        .room-controls button:active {
+            transform: scale(0.98);
+        }
+
+        /* Audience Container */
+        #audience-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #audience-name {
+            padding: 12px 20px;
+            width: 300px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #audience-join {
+            background-color: #27ae60;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #audience-join:hover {
+            background-color: #219150;
+            transform: translateY(-3px);
+        }
+
+        #audience-join:active {
+            transform: scale(0.98);
+        }
+
+        /* Participants List */
+        #participants-list {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+            width: 80%;
+            max-width: 400px;
+            text-align: left;
+        }
+
+        .participant-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f9f9f9;
+        }
+
+        .participant-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Mute Button */
+        .local-mute-control {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 70px;
+            background: #3498db;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .local-mute-control.muted {
+            background: #e74c3c;
+        }
+
+        .local-mute-control svg {
+            width: 36px;
+            height: 36px;
+            stroke: white;
+        }
+
+        /* Leave Button */
+        #leave {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #e74c3c;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        #leave:hover {
+            background: #c0392b;
+            transform: translateY(-3px);
+        }
+
+        #leave:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Broadcast</h1>
+    
+    <div class="room-controls">
+        <button id="host-join">Join as Host</button>
+    </div>
+
+    <div id="audience-container">
+        <input type="text" id="audience-name" placeholder="Enter your name">
+        <button id="audience-join">Join as Audience</button>
+    </div>
+
+    <div id="participants-list"></div>
+
+    <div id="local-mute" class="local-mute-control" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L12 12M12 12L12 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    <button id="leave" style="display:none;">Leave</button>
+</body>
+</html>
