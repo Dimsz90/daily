@@ -6,7 +6,7 @@ const port = 3000;
 
 app.use(bodyParser.json());
 
-const DAILY_API_KEY = 'aca98b12456ce73b6adf26626f02b24c0bc05204dd469b5ce97092e1f1e5e696';
+const DAILY_API_KEY = 'HERE-API-KEY';
 
 app.post('/create-token', async (req, res) => {
     const { isHost, userName } = req.body;

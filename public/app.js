@@ -49,10 +49,9 @@ async function joinRoom(isHost, userName = 'Audience') {
 
         // Create call object with updated configuration
         callFrame = window.DailyIframe.createCallObject({
-            url: 'https://sunthre.daily.co/testings',
-            token: 'dummy-token',
+            url: 'MY-ROOM-URL',
+            token: 'token-here',
             showLeaveButton: false,
-            // Updated configuration for audio/video
             subscribeToTracksAutomatically: true,
             audioSource: true,
             videoSource: true
@@ -62,7 +61,7 @@ async function joinRoom(isHost, userName = 'Audience') {
         await callFrame.join({
             userName: userName,
             audioSource: true,
-            videoSource: true
+            videoSource: false
         });
 
         // UI updates
@@ -104,7 +103,7 @@ async function joinRoom(isHost, userName = 'Audience') {
     } catch (error) {
         console.error('Error joining room:', error);
         
-        // Optional: Display error to user
+        // Display error to user
         const errorDisplay = document.getElementById('error-display');
         if (errorDisplay) {
             errorDisplay.textContent = `Failed to join room: ${error.message}`;
