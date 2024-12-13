@@ -49,7 +49,7 @@ async function joinRoom(isHost, userName = 'Audience') {
 
         // Create call object with updated configuration
         callFrame = window.DailyIframe.createCallObject({
-            url: 'MY-ROOM-URL',
+            url: 'https://sunthre.daily.co/testings',
             token: 'token-here',
             showLeaveButton: false,
             subscribeToTracksAutomatically: true,
