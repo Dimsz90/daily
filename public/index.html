@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sunthree Tour</title>
     <style>
-
         body {
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
@@ -110,10 +109,46 @@
             font-size: 14px;
             color: #666;
         }
+
+        /* New Loading Spinner Styles */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #0056b3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <div class="loader-overlay" id="loader-overlay">
+        <div class="loader"></div>
+    </div>
+
     <div class="container">
+        <div id="ping-indicator" style="display:none;">🌐 Ping: - ms</div>
+        
+        <div id="participants-list" style="display:none;">
+            <h3>Pendengar :</h3>
+            <div id="participants-container"></div>
+        </div>
         <div class="logo-container">
             <div class="logo">
                 <img src="./logo.png" alt="Sunthree">
@@ -124,9 +159,9 @@
         <div class="join-section">
             <input type="text" id="username" placeholder="Enter your name">
             <div class="controls">
-                <button id="host-join-btn" class="btn">Join as Host</button>
-                <button id="audience-join-btn" class="btn">Join as Audience</button>
-                <button id="leave-btn" class="btn btn-danger" style="display:none;">Leave Meeting</button>
+                <button id="host-join-btn" class="btn">Join sebagai Mutowif</button>
+                <button id="audience-join-btn" class="btn">Join sebagai Jamaah</button>
+                <button id="leave-btn" class="btn btn-danger" style="display:none;">Keluar</button>
             </div>
         </div>
 
@@ -145,15 +180,62 @@
 
     <script src="https://unpkg.com/@daily-co/daily-js"></script>
     <script>
-        const ROOM_URL = 'https://sunthre.daily.co/testings';
+    const ROOM_URL = 'https://sunthre.daily.co/testings';
         let call = null;
         let isMuted = false;
         let isHost = false;
+        let pingInterval = null;
+
+        async function measurePing() {
+        const start = Date.now();
+        try {
+            await fetch('https://www.google.com', {
+                mode: 'no-cors',
+                cache: 'no-cache'
+            });
+            const pingTime = Date.now() - start;
+            return pingTime;
+        } catch (error) {
+            console.error('Ping measurement failed:', error);
+            return null;
+        }
+    }
+
+    function monitorNetworkQuality() {
+        const pingIndicator = document.getElementById('ping-indicator');
+        pingIndicator.style.display = 'block';
+
+        pingInterval = setInterval(async () => {
+            const pingTime = await measurePing();
+            
+            if (pingTime !== null) {
+                pingIndicator.textContent = `🌐 Ping: ${pingTime} ms`;
+
+                // Color code ping
+                if (pingTime < 100) {
+                    pingIndicator.style.color = '#28a745'; // Green for good ping
+                } else if (pingTime < 300) {
+                    pingIndicator.style.color = '#ffc107'; // Yellow for moderate ping
+                } else {
+                    pingIndicator.style.color = '#dc3545'; // Red for poor ping
+                }
+            } else {
+                pingIndicator.textContent = '🌐 Ping: Disconnected';
+                pingIndicator.style.color = '#dc3545';
+            }
+        }, 2000); // Check ping every 2 seconds
+    }
 
         // Function to safely destroy existing call instance
         function destroyExistingCall() {
             if (call) {
                 try {
+                    // Stop ping monitoring
+                    if (pingInterval) {
+                        clearInterval(pingInterval);
+                        pingInterval = null;
+                    }
+
                     // Attempt to leave the meeting first
                     call.leave();
 
@@ -168,12 +250,91 @@
             }
         }
 
+        function showLoader() {
+            document.getElementById('loader-overlay').style.display = 'flex';
+        }
+
+        function hideLoader() {
+            document.getElementById('loader-overlay').style.display = 'none';
+        }
+
+        function updateParticipantsList() {
+            if (!call) return;
+
+            const participantsContainer = document.getElementById('participants-container');
+            const participantsList = document.getElementById('participants-list');
+            
+            // Clear existing participants
+            participantsContainer.innerHTML = '';
+
+            // Get all participants
+            const participants = call.participants();
+            
+            // If no participants, hide the list
+            if (Object.keys(participants).length === 0) {
+                participantsList.style.display = 'none';
+                return;
+            }
+
+            // Show participants list
+            participantsList.style.display = 'block';
+
+            // Add each participant to the list
+            Object.values(participants).forEach(participant => {
+                const participantEl = document.createElement('div');
+                participantEl.className = 'participant-item';
+                
+                const statusIndicator = document.createElement('span');
+                statusIndicator.className = `participant-status ${participant.isOnline ? 'online' : 'offline'}`;
+
+                const nameEl = document.createElement('span');
+                nameEl.textContent = participant.user_name || 'Unnamed Participant';
+
+                participantEl.appendChild(statusIndicator);
+                participantEl.appendChild(nameEl);
+                
+                participantsContainer.appendChild(participantEl);
+            });
+        }
+
+        function monitorNetworkQuality() {
+            if (!call) return;
+
+            const pingIndicator = document.getElementById('ping-indicator');
+            pingIndicator.style.display = 'block';
+
+            pingInterval = setInterval(async () => {
+                try {
+                    const startTime = Date.now();
+                    const stats = await call.getNetworkStats();
+                    const pingTime = Date.now() - startTime;
+
+                    pingIndicator.textContent = `🌐 Ping: ${pingTime} ms`;
+
+                    // Color code ping
+                    if (pingTime < 100) {
+                        pingIndicator.className = ''; // Green
+                    } else if (pingTime < 300) {
+                        pingIndicator.className = 'poor'; // Yellow
+                    } else {
+                        pingIndicator.className = 'critical'; // Red
+                    }
+                } catch (error) {
+                    console.error('Error getting network stats:', error);
+                    pingIndicator.textContent = '🌐 Ping: - ms';
+                }
+            }, 1000); // Check ping every 5 seconds
+        }
+
         function displayTrack(evt) {
             if (evt.track.kind === 'video') {
                 displayVideo(evt);
             } else if (evt.track.kind === 'audio') {
                 playAudio(evt);
             }
+            
+            // Update participants list when a track starts
+            updateParticipantsList();
         }
 
         function displayVideo(evt) {
@@ -214,6 +375,9 @@
                     el.remove();
                 }
             });
+
+            // Update participants list when a track stops
+            updateParticipantsList();
         }
 
         function createDailyInstance(config = {}) {
@@ -233,12 +397,16 @@
             call.on('track-stopped', destroyTrack);
             call.on('joined-meeting', handleJoin);
             call.on('left-meeting', handleLeave);
+            call.on('participant-joined', updateParticipantsList);
+            call.on('participant-updated', updateParticipantsList);
+            call.on('participant-left', updateParticipantsList);
             call.on('error', handleError);
 
             return call;
         }
 
         function handleJoin(event) {
+            hideLoader();
             document.getElementById('host-join-btn').style.display = 'none';
             document.getElementById('audience-join-btn').style.display = 'none';
             document.getElementById('leave-btn').style.display = 'inline-block';
@@ -248,20 +416,30 @@
             } else {
                 document.getElementById('local-mute').style.display = 'none';
             }
+
+            // Start monitoring network quality and update participants
+            updateParticipantsList();
+            monitorNetworkQuality();
         }
 
         function handleLeave() {
+            hideLoader();
             document.getElementById('host-join-btn').style.display = 'inline-block';
             document.getElementById('audience-join-btn').style.display = 'inline-block';
             document.getElementById('leave-btn').style.display = 'none';
             document.getElementById('local-mute').style.display = 'none';
             document.getElementById('videos').innerHTML = '';
             
+            // Hide participants list and ping indicator
+            document.getElementById('participants-list').style.display = 'none';
+            document.getElementById('ping-indicator').style.display = 'none';
+
             // Destroy the call instance
             destroyExistingCall();
         }
 
         function handleError(error) {
+            hideLoader();
             console.error('Daily.co Error:', error);
             alert('Something went wrong: ' + error.message);
             
@@ -274,6 +452,7 @@
             const username = document.getElementById('username').value || 'Host';
            
             try {
+                showLoader();
                 // Request microphone permissions
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 stream.getTracks().forEach(track => track.stop());
@@ -281,6 +460,7 @@
                 createDailyInstance({ userName: username });
                 await call.join();
             } catch (error) {
+                hideLoader();
                 console.error('Join failed:', error);
                 alert('Failed to join room: ' + error.message);
             }
@@ -291,9 +471,11 @@
             const username = document.getElementById('username').value || 'Audience';
 
             try {
+                showLoader();
                 createDailyInstance({ userName: username });
                 await call.join();
             } catch (error) {
+                hideLoader();
                 console.error('Join failed:', error);
                 alert('Failed to join room: ' + error.message);
             }
