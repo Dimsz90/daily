@@ -6,7 +6,7 @@ const port = 3000;
 
 app.use(bodyParser.json());
 
-const DAILY_API_KEY = 'aca98b12456ce73b6adf26626f02b24c0bc05204dd469b5ce97092e1f1e5e696'; // Ganti dengan API Key Anda
+const DAILY_API_KEY = 'aca98b12456ce73b6adf26626f02b24c0bc05204dd469b5ce97092e1f1e5e696';
 
 // Endpoint untuk menghasilkan token
 app.post('/create-token', async (req, res) => {
