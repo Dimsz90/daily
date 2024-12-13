@@ -1,82 +1,119 @@
-let callFrame;
-let isMuted = false;
-let localParticipantId;
+  // Global variables
+  let callFrame;
+  let isMuted = false;
+  let localParticipantId;
 
-document.getElementById('host-join').addEventListener('click', () => {
-    joinRoom(true, "mutowif");
-});
+  // Event Listeners
+  document.getElementById('host-join-btn').addEventListener('click', () => {
+      joinRoom(true, "mutowif");
+  });
 
-document.getElementById('audience-join').addEventListener('click', () => {
-    const userName = document.getElementById('audience-name').value.trim();
-    if (!userName) {
-        alert("Please enter your name!");
-        return;
-    }
-    joinRoom(false, userName);
-});
+  document.getElementById('audience-join-btn').addEventListener('click', () => {
+      const userName = document.getElementById('audience-name').value.trim();
+      if (!userName) {
+          alert("Please enter your name!");
+          return;
+      }
+      joinRoom(false, userName);
+  });
 
-document.getElementById('local-mute').addEventListener('click', () => {
-    isMuted = !isMuted;
-    callFrame.setLocalAudio(!isMuted);
+  document.getElementById('local-mute').addEventListener('click', () => {
+      isMuted = !isMuted;
+      callFrame.setLocalAudio(!isMuted);
 
-    const muteButton = document.getElementById('local-mute');
-    if (isMuted) {
-        muteButton.classList.add('muted');
-    } else {
-        muteButton.classList.remove('muted');
-    }
-});
+      const muteButton = document.getElementById('local-mute');
+      muteButton.classList.toggle('muted', isMuted);
+  });
 
-document.getElementById('leave').addEventListener('click', () => {
-    callFrame.leave();
-    location.reload();
-});
+  document.getElementById('leave').addEventListener('click', () => {
+      if (callFrame) {
+          callFrame.leave();
+          location.reload();
+      }
+  });
 
-async function joinRoom(isHost, userName = 'Audience') {
-    try {
-        // Simulasi API token
-        const roomUrl = 'https://sunthre.daily.co/testings';
-        const token = 'dummy-token'; // Ganti dengan token sebenarnya
+  // Setup track listeners
+  function setupTrackListeners() {
+      callFrame.on('track-started', (event) => {
+          const track = event.track;
+          const stream = event.stream;
+          const participant = event.participant;
 
-        callFrame = window.DailyIframe.createCallObject({
-            url: roomUrl,
-            token: token,
-            showLeaveButton: false,
-        });
+          if (track.kind === 'video') {
+              const videoElement = document.createElement('video');
+              videoElement.srcObject = stream;
+              videoElement.autoplay = true;
+              videoElement.muted = participant.local;
+              videoElement.id = `video-${participant.id}`;
 
-        await callFrame.join();
+              if (participant.local) {
+                  document.getElementById('local-video').appendChild(videoElement);
+              } else {
+                  document.getElementById('remote-videos').appendChild(videoElement);
+              }
+          }
 
-        document.getElementById('host-join').style.display = 'none';
-        document.getElementById('audience-container').style.display = 'none';
-        document.getElementById('leave').style.display = 'block';
+          if (track.kind === 'audio') {
+              const audioElement = document.createElement('audio');
+              audioElement.srcObject = stream;
+              audioElement.autoplay = true;
+              audioElement.id = `audio-${participant.id}`;
+          }
+      });
+  }
 
-        if (userName === "mutowif") {
-            // Tampilkan tombol mute/unmute jika nama adalah "mutowif"
-            document.getElementById('local-mute').style.display = 'flex';
-        } else {
-            // Sembunyikan tombol mute/unmute dan set audio ke mute untuk nama lain
-            document.getElementById('local-mute').style.display = 'none';
-            isMuted = true;
-            callFrame.setLocalAudio(false);
-        }
+  // Join Room Function
+  async function joinRoom(isHost, userName = 'Audience') {
+      try {
+          // Replace with your actual Daily.co room URL and token
+          const roomUrl = 'https://sunthre.daily.co/testings';
+          const token = 'your-token';
 
-        localParticipantId = callFrame.participants().local.id;
+          callFrame = window.DailyIframe.createCallObject({
+              url: roomUrl,
+              token: token,
+              showLeaveButton: false,
+          });
 
-        callFrame.on('participant-joined', updateParticipants);
-        callFrame.on('participant-left', updateParticipants);
-        callFrame.on('participant-updated', updateParticipants);
+          await callFrame.join({
+              userName: userName
+          });
 
-        updateParticipants();
-    } catch (error) {
-        console.error('Error joining room:', error);
-    }
-}
+          // Hide join interfaces
+          document.getElementById('host-join-btn').style.display = 'none';
+          document.getElementById('audience-container').style.display = 'none';
+          document.getElementById('leave').style.display = 'block';
 
-function updateParticipants() {
-    const participants = callFrame.participants();
-    const participantList = document.getElementById('participants-list');
+          // Setup mute for host
+          if (userName === "mutowif") {
+              document.getElementById('local-mute').style.display = 'block';
+          } else {
+              document.getElementById('local-mute').style.display = 'none';
+          }
 
-    participantList.innerHTML = Object.values(participants)
-        .map(participant => `<div>${participant.user_name || "Unknown User"}</div>`)
-        .join('');
-}
+          // Setup track listeners
+          setupTrackListeners();
+
+          // Participant tracking
+          callFrame.on('participant-joined', updateParticipants);
+          callFrame.on('participant-left', updateParticipants);
+          
+          updateParticipants();
+
+      } catch (error) {
+          console.error('Error joining room:', error);
+          alert('Failed to join the room. Please try again.');
+      }
+  }
+
+  // Update Participants
+  function updateParticipants() {
+      if (!callFrame) return;
+
+      const participants = callFrame.participants();
+      const participantList = document.getElementById('participants-list');
+
+      participantList.innerHTML = Object.values(participants)
+          .map(participant => `<div>${participant.user_name || "Unknown User"}</div>`)
+          .join('');
+  }

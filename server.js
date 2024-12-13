@@ -6,8 +6,9 @@ const port = 3000;
 
 app.use(bodyParser.json());
 
-const DAILY_API_KEY = 'aca98b12456ce73b6adf26626f02b24c0bc05204dd469b5ce97092e1f1e5e696';
+const DAILY_API_KEY = 'aca98b12456ce73b6adf26626f02b24c0bc05204dd469b5ce97092e1f1e5e696'; // Ganti dengan API Key Anda
 
+// Endpoint untuk menghasilkan token
 app.post('/create-token', async (req, res) => {
     const { isHost, userName } = req.body;
     const tokenOptions = {
@@ -15,9 +16,9 @@ app.post('/create-token', async (req, res) => {
             enable_screenshare: isHost,
             enable_recording: isHost,
             start_video_off: true,
-            start_audio_off: !isHost,
+            start_audio_off: !isHost, // Host: audio aktif, Audience: audio mati
             user_name: userName || (isHost ? 'Host' : 'Audience'),
-            permissions: isHost ? ['start_audio'] : [],
+            permissions: isHost ? ['start_audio', 'start_video'] : [],
         },
     };
 
@@ -33,10 +34,8 @@ app.post('/create-token', async (req, res) => {
         });
 
         const token = await response.json();
-        console.log('Generated token:', token);
 
-        if (!token.token || typeof token.token !== 'string') {
-            console.error('Invalid token generated:', token);
+        if (!token.token) {
             return res.status(400).json({ error: 'Invalid token generated' });
         }
 
@@ -47,11 +46,8 @@ app.post('/create-token', async (req, res) => {
     }
 });
 
+// Serve frontend files
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
