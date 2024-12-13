@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunhtree</title>
+    <title>Video Conference</title>
     <style>
         body {
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f0f8ff; /* Soft blue for friendly tone */
+            background-color: #f0f8ff;
             color: #333;
         }
         .container {
@@ -22,7 +22,7 @@
         h2 {
             font-size: 24px;
             text-align: center;
-            color: #0056b3; /* Professional blue */
+            color: #0056b3;
         }
         video, audio {
             width: 100%;
@@ -96,7 +96,7 @@
 </head>
 <body>
     <div class="container">
-    <h2>Sunthree Tour Audio System</h2>
+        <h2>Welcome to the Video Conference</h2>
         
         <div class="join-section">
             <input type="text" id="username" placeholder="Enter your name">
@@ -110,7 +110,6 @@
         <div id="audio"></div>
         <div id="videos"></div>
 
-        <!-- Mute Button for Host -->
         <button id="local-mute" style="display:none;">
             🎤
             <span class="mute-x">✖</span>
@@ -127,6 +126,24 @@
         let call = null;
         let isMuted = false;
         let isHost = false;
+
+        // Function to safely destroy existing call instance
+        function destroyExistingCall() {
+            if (call) {
+                try {
+                    // Attempt to leave the meeting first
+                    call.leave();
+
+                    // Then destroy the call object
+                    call.destroy();
+                } catch (error) {
+                    console.error('Error destroying call:', error);
+                } finally {
+                    // Ensure call is set to null
+                    call = null;
+                }
+            }
+        }
 
         function displayTrack(evt) {
             if (evt.track.kind === 'video') {
@@ -177,6 +194,9 @@
         }
 
         function createDailyInstance(config = {}) {
+            // Destroy any existing call first
+            destroyExistingCall();
+
             if (!config.userName) {
                 config.userName = 'Guest';
             }
@@ -192,7 +212,6 @@
             call.on('left-meeting', handleLeave);
             call.on('error', handleError);
 
-            window.call = call;
             return call;
         }
 
@@ -214,11 +233,17 @@
             document.getElementById('leave-btn').style.display = 'none';
             document.getElementById('local-mute').style.display = 'none';
             document.getElementById('videos').innerHTML = '';
+            
+            // Destroy the call instance
+            destroyExistingCall();
         }
 
         function handleError(error) {
             console.error('Daily.co Error:', error);
             alert('Something went wrong: ' + error.message);
+            
+            // Reset UI
+            handleLeave();
         }
 
         document.getElementById('host-join-btn').addEventListener('click', async () => {
@@ -229,12 +254,6 @@
                 // Request microphone permissions
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 stream.getTracks().forEach(track => track.stop());
-
-                if (call) {
-                    await call.leave();
-                    call.destroy();
-                }
-
 
                 createDailyInstance({ userName: username });
                 await call.join();
@@ -249,11 +268,6 @@
             const username = document.getElementById('username').value || 'Audience';
 
             try {
-                if (call) {
-                    await call.leave();
-                    call.destroy();
-                }
-
                 createDailyInstance({ userName: username });
                 await call.join();
             } catch (error) {
